@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import mlflow
 import mlflow.sklearn
-
+import dagshub
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -28,6 +28,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # MLflow experiment
+dagshub.init(repo_owner='JanaJouni', repo_name='fake-news-mlops', mlflow=True)
 mlflow.set_experiment("Fake-News-Detection")
 
 with mlflow.start_run():

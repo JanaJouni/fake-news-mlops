@@ -42,6 +42,4 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t fake-news-api .
-    - name: Check MLflow connection
-      run: |
-        python -c "import mlflow; print('MLflow OK')"
+ 

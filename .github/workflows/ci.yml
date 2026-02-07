@@ -46,10 +46,10 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/fake-news-api:latest .
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/fake_news_mlops:latest .
 
     - name: Push Docker image
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/fake-news-api:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/fake_news_mlops:latest
 
  

@@ -92,7 +92,7 @@ with mlflow.start_run():
     mlflow.keras.log_model(
         model,
         artifact_path="gru_model",
-        registered_model_name="fake_news_gru"
+        registered_model_name="fake_news_gru_v1S"
     )
 
     # Log metrics & params

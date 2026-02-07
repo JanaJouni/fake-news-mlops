@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import logging
+from fastapi import Query
 
 from backend.model_loader import load_production_model
 from backend.db import get_connection
@@ -138,3 +139,31 @@ def get_history(limit: int = 10):
     except Exception as e:
         logging.error(f"Failed to fetch history: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch history")
+    
+    
+# --------------------------------------------------
+# delete endpoint
+# --------------------------------------------------
+
+@app.delete("/history")
+def delete_history_item(text: str = Query(...)):
+    """
+    Delete a history record by exact text.
+    """
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            DELETE FROM prediction_history
+            WHERE text = %s
+            """,
+            (text,)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {"status": "success", "deleted_text": text}
+    except Exception as e:
+        logging.error(f"Failed to delete history item: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete history item")

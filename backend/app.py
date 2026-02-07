@@ -1,8 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from backend.model_loader import load_production_model
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Fake News Detection API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load model at startup
 try:

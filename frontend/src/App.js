@@ -11,78 +11,75 @@ function App() {
 
   const BACKEND_URL = "http://127.0.0.1:8000"
 
-  // Fetch history on mount
+
+  // --------------------------
+  // Load history
+  // --------------------------
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/history?limit=20`)
-        if (!res.ok) throw new Error("Failed to fetch history")
-        const data = await res.json()
-        setHistory(
-          data.map((item) => ({
-            text: item.text,
-            label: item.label,
-            confidence: item.confidence,
-          }))
-        )
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    fetchHistory()
+    fetch(`${BACKEND_URL}/history?limit=20`)
+      .then((res) => res.json())
+      .then(setHistory)
+      .catch(console.error)
   }, [])
 
+  // --------------------------
   // Predict
+  // --------------------------
   const handlePredict = async () => {
     if (!text.trim()) return
+
     setLoading(true)
     setResult(null)
+
     try {
       const res = await fetch(`${BACKEND_URL}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       })
-      if (!res.ok) throw new Error("Prediction failed")
+
+      if (!res.ok) throw new Error()
+
       const data = await res.json()
+
       setResult(data)
       setHistory((prev) => [
         {
+          id: Date.now(), // temporary until reload
           text,
           label: data.label,
           confidence: data.confidence,
         },
         ...prev,
       ])
+
       setText("")
-    } catch (err) {
+    } catch {
       alert("Backend not reachable")
-      console.error(err)
     } finally {
       setLoading(false)
     }
   }
 
-  // Delete a history item
-  const handleDelete = async (textToDelete) => {
+  // --------------------------
+  // Delete
+  // --------------------------
+  const handleDelete = async (id) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/history?text=${encodeURIComponent(textToDelete)}`, {
+      const res = await fetch(`${BACKEND_URL}/history/${id}`, {
         method: "DELETE",
       })
-      if (!res.ok) throw new Error("Failed to delete history item")
+      if (!res.ok) throw new Error()
 
-      // Remove from frontend state
-      setHistory((prev) => prev.filter((item) => item.text !== textToDelete))
-    } catch (err) {
-      alert("Failed to delete history item")
-      console.error(err)
+      setHistory((prev) => prev.filter((item) => item.id !== id))
+    } catch {
+      alert("Failed to delete item")
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex">
-      
-      {/* LEFT — MAIN APP */}
+    <div className="min-h-screen bg-slate-900 text-white flex">
+      {/* MAIN */}
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-xl">
           <h1 className="text-2xl font-bold mb-4 text-center">
@@ -104,20 +101,20 @@ function App() {
           </Button>
 
           {result && (
-            <div className="mt-4 p-4 rounded-lg bg-slate-800 border border-slate-600">
+            <div className="mt-4 p-4 bg-slate-800 rounded">
               <p className="text-lg">
                 Result:{" "}
                 <span
                   className={
                     result.label === "FAKE"
-                      ? "text-red-500 text-xl font-extrabold"
-                      : "text-green-500 text-xl font-extrabold"
+                      ? "text-red-500 font-bold"
+                      : "text-green-500 font-bold"
                   }
                 >
                   {result.label}
                 </span>
               </p>
-              <p className="text-gray-300 mt-1">
+              <p className="text-gray-300">
                 Confidence: {(result.confidence * 100).toFixed(2)}%
               </p>
             </div>
@@ -125,33 +122,20 @@ function App() {
         </Card>
       </div>
 
-      {/* RIGHT — HISTORY */}
-      <div className="w-80 bg-slate-900 border-l border-slate-700 p-4 overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-3">History</h2>
+      {/* HISTORY */}
+      <div className="w-80 bg-slate-800 p-4 overflow-y-auto">
+        <h2 className="font-semibold mb-3">History</h2>
 
-        {history.length === 0 && (
-          <p className="text-gray-400 text-sm">No predictions yet</p>
-        )}
-
-        {history.map((item, idx) => (
-          <div
-            key={idx}
-            className="mb-3 p-3 rounded-lg bg-slate-800 border border-slate-700 text-sm relative"
-          >
-            <p className="truncate text-gray-200">{item.text}</p>
-            <p
-              className={
-                item.label === "FAKE"
-                  ? "text-red-400 font-bold mt-1"
-                  : "text-green-400 font-bold mt-1"
-              }
-            >
+        {history.map((item) => (
+          <div key={item.id} className="mb-3 bg-slate-700 p-3 rounded relative">
+            <p className="truncate">{item.text}</p>
+            <p className="font-bold mt-1">
               {item.label} — {(item.confidence * 100).toFixed(1)}%
             </p>
 
             <Button
-              onClick={() => handleDelete(item.text)}
-              className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700"
+              onClick={() => handleDelete(item.id)}
+              className="absolute top-2 right-2 bg-red-600 text-xs"
             >
               Delete
             </Button>
